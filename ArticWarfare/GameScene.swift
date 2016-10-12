@@ -8,6 +8,7 @@
 
 import SpriteKit
 import GameplayKit
+
 fileprivate func < <T : Comparable>(lhs: T?, rhs: T?) -> Bool {
   switch (lhs, rhs) {
   case let (l?, r?):
@@ -103,7 +104,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     //Animations
     var penguinStdFly: [SKTexture]?
-    //var penguinStdFlyAtlas = SKTextureAtlas(named: "PenguinStandard")
     
     //SKEmitters
     
@@ -116,13 +116,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     let scale: CGFloat = 2.0
     var moveXFactor: CGFloat = 0.0
-    //cameraNode.position = CGPoint(x: cameraNode.position.x, y: cameraNode.position.y)
     let bg1ParallaxSpeedFactor: CGFloat = -0.4
     let bg2ParallaxSpeedFactor: CGFloat = -0.2
     let bg3ParallaxSpeedFactor: CGFloat = -0.1
     
     //Physics fields
     var airResistance = SKFieldNode.dragField()
+    
+    /*
+    **  Setup view
+    */
     
     override func didMove(to view: SKView){
         playBackgroundMusic("bgWindSound2.m4a")
@@ -151,6 +154,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         deltaTime = 0.01666
     }
     
+    /** SETUP **/
+    
+    /*
+    **  Create initial nodes in scene
+    */
+    
     func createNodes() {
         //link custom nodes
         enumerateChildNodes(withName: "//*", using: { node, _ in
@@ -171,6 +180,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         constrainBackgroundNode(backgroundLayer3, lowerRange: -1200, upperRange: 600)
     }
     
+    /*
+    **  Physics field for resistance (wind)
+    */
+    
     func createField() {
         airResistance.isEnabled = true
         airResistance.strength = 0.005
@@ -179,6 +192,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         print("sprite layer position: \(spriteLayer.position)")
         //addChild(airResistance)
     }
+    
+    /*
+    **  Setup camera node and set constraints for scale and position
+    */
     
     func setupCamera() {
         spriteLayer.addChild(cameraNode)
@@ -200,9 +217,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let levelEdgeConstraint = SKConstraint.positionX(xRange, y: yRange)
         levelEdgeConstraint.referenceNode = spriteLayer
         
-        //cameraXYConstraint = SKConstraint.positionX(SKRange(lowerLimit: CGFloat(-2000.0), upperLimit: CGFloat(1200/(getCameraXScale()*2))), y: SKRange(lowerLimit: CGFloat(-300), upperLimit: CGFloat(4000)))
         
-        //HUD//
+        /* 
+        **  HUD - bound to camera to stay in position of scene
+        */
+        
         scoreLabel = SKLabelNode()
         scoreLabel.text = "Score: 0"
         scoreLabel.fontName = "helvetica"
@@ -214,24 +233,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //cameraNode.constraints = [cameraXYConstraint]
     }
     
-    func constrainCameraToScene() {
-        if (cameraNode.position.x < -2000.0) {
-            cameraNode.position.x = -2000.0
-        }
-        if (cameraNode.position.x > (1200/(getCameraXScale()*2))) {
-            cameraNode.position.x = (1200/(getCameraXScale()*2))
-        }
-        if (cameraNode.position.y < -300) {
-            cameraNode.position.y = -300
-        }
-        if (cameraNode.position.y > 4000) {
-            cameraNode.position.y = 4000
-        }
-    }
+    /*
+    **  Update score on HUD - for use in update loop
+    */
     
     func updateHUD() {
         scoreLabel.text = "Score: \(score)"
     }
+    
+    /*
+    **  Update camera depending on penguin launch - for use in update loop
+    */
     
     func updateCamera() {
         //keep camera on penguin x coordinate if penguinInAction is true
@@ -242,6 +254,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    /*
+    **  Create texture array for animations
+    */
+    
     func createAnimations(_ textureAtlas: SKTextureAtlas, textureName: String) -> [SKTexture] {
         var textureArray = [SKTexture]()
         let numImages = textureAtlas.textureNames.count
@@ -251,6 +267,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         return textureArray
     }
+    
+    /*
+    **  Add penguin node to screen
+    */
     
     func addPenguin() {
         if(penguinExists) {
@@ -284,6 +304,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
     }
     
+    /*  
+    **  Constraint to center camera on penguin
+    */
+    
     func constrainCameraToPenguin(_ node: SKNode) {
         let penguinCamRange = SKRange(lowerLimit: 0, upperLimit: 100)
         if node.position.x > slingshot.position.x || node.position.x < slingshot.position.x {
@@ -292,6 +316,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         
     }
+    
+    /*
+    **  When penguin is released from slingshot
+    */
     
     func launchPenguin(_ node: SKNode) {
         penguinInAction = true
@@ -307,6 +335,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         })
     }
     
+    /*
+    **  Remove penguin from scene - used after set time //TODO: remove after movement ceases
+    */
+    
     func removePenguin(_ node: SKNode) {
         penguin!.physicsBody!.contactTestBitMask = 0
         penguinCanInteract = false
@@ -320,7 +352,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         })
     }
     
-    /**Emitters**/
+    /*
+    **  Emitters - takes filename of texture, node, and remove after duration if applicable
+    */
+    
     func emitParticles(_ name: String, node: SKNode, remove: Bool) {
         let pos = node.position
         let particles = SKEmitterNode(fileNamed: name)!
@@ -332,6 +367,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             node.run(SKAction.sequence([SKAction.scale(to: 0.0, duration: 0.5), SKAction.removeFromParent()]))
         }
     }
+    
+    /*
+    **  Touch handlers
+    */
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         if (touches.count == 2) {
@@ -410,6 +449,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    /*
+    **  Zoom to pinch - //TODO: pinch at position between touches
+    */
+    
     func handlePinch(_ sender: UIPinchGestureRecognizer) {
         self.isUserInteractionEnabled = true
         if sender.numberOfTouches == 2 {
@@ -441,12 +484,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isPinching = false
     }
     
+    /*
+    **  Boolean for when penguin contacts another object - used in game logic
+    */
+    
     func penguinMadeContact(_ node: SKNode, sound: SKAction) {
         hasNotMadeContact = false
         removeAction(forKey: "wee")
         run(sound)
         node.removeAllChildren()
     }
+    
+    /*
+    **  Did begin contact method - handles logic after collisions
+    */
     
     func didBegin(_ contact: SKPhysicsContact) {
         if (updatesCalled == 0) {return}
@@ -512,7 +563,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                         }
                     }
             }
-                //runAction(woodCrack)
+            
             case PhysicsCategory.StoneBlock | PhysicsCategory.WoodBlock:
                 return
             case PhysicsCategory.Penguin | PhysicsCategory.Penguin:
@@ -544,9 +595,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
     }
     
-    func didEnd(_ contact: SKPhysicsContact) {
-        
-    }
+    /*
+    **  Update loop
+    */
     
     override func update(_ currentTime: TimeInterval) {
         updateHUD()
@@ -584,6 +635,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         previousPosition.x = cameraNode.position.x  //for calculating deltaPosition
     }
     
+    /*  
+    ** Parallax effect for 3 background layers
+    */
+    
     func parallaxEffect() {
         moveXFactor = deltaX * scale
         
@@ -595,6 +650,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                                             y: backgroundLayer3.position.y)
     }
     
+    /*
+     **  New camera constraints
+     */
+    
+    func constrainCameraToScene() {
+        if (cameraNode.position.x < -2000.0) {
+            cameraNode.position.x = -2000.0
+        }
+        if (cameraNode.position.x > (1200/(getCameraXScale()*2))) {
+            cameraNode.position.x = (1200/(getCameraXScale()*2))
+        }
+        if (cameraNode.position.y < -300) {
+            cameraNode.position.y = -300
+        }
+        if (cameraNode.position.y > 4000) {
+            cameraNode.position.y = 4000
+        }
+    }
+    
+    /*
+    **  Constrain background layers to scene
+    */
+    
     func constrainBackgroundNode(_ layer: SKNode, lowerRange: CGFloat, upperRange: CGFloat) {
         let xRange = SKRange(lowerLimit: lowerRange, upperLimit: upperRange)
         let levelEdgeConstraint = SKConstraint.positionX(xRange)
@@ -602,8 +680,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         layer.constraints = [levelEdgeConstraint]
         
     }
+    
     /******HELPERS*****/
-    /*Slingshot helpers*/
+    
+    /*
+    **  Slingshot helper - keeps penguin within distance of slingshot 
+    */
+    
     func fingerDistanceFromPenguinRestPosition(_ penguinRestPosition: CGPoint, fingerPosition: CGPoint) -> CGFloat {
         return sqrt(pow(penguinRestPosition.x - fingerPosition.x,2) + pow(penguinRestPosition.y - fingerPosition.y,2))
     }
@@ -615,7 +698,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return CGPoint(x: cX + penguinRestPosition.x, y: cY + penguinRestPosition.y)
     }
     
-    /*Convert position on one node to another*/
+    /*
+    **  Convert position position of node from one layer to another
+    */
+    
     func convertWorldLayerToSprites(_ position: CGPoint) -> CGPoint {
         let newPositionX = position.x - 1024
         let newPositionY = position.y - 768
@@ -628,7 +714,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return CGPoint(x: newPositionX, y: newPositionY)
     }
     
-    /*Camera functions*/
+    /*
+    ** Camera functions and bools
+    */
+    
     func getCameraXScale() -> CGFloat {
         return cameraNode.xScale
     }
@@ -643,6 +732,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         return false
     }
+    
+    /*
+    **  Playbackground music
+    */
     
     func playBackgroundMusic(_ name: String) {
         if bgSounds != nil {
